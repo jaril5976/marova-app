@@ -4,43 +4,22 @@ import {
     Text,
     StyleSheet,
     ScrollView,
-    SafeAreaView,
     TouchableOpacity,
     Image,
     Dimensions,
 } from 'react-native';
 import { Menu, Search, ShoppingCart, User, Bell, SlidersHorizontal, Plus } from 'lucide-react-native';
 import { COLORS, SPACING } from '../theme/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Header } from '../core/components/Header/Header';
 
 const { width } = Dimensions.get('window');
 const PRODUCT_WIDTH = (width - SPACING.md * 3) / 2;
 
-export const DealScreen = () => {
+export const DealsScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
-            {/* Promo Bar */}
-            <View style={styles.promoBar}>
-                <Text style={styles.promoText}>LAUNCHES | BUY MORE, SAVE MORE | 25% PURE PERFUMES</Text>
-            </View>
-
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity>
-                    <Menu color={COLORS.text} size={24} />
-                </TouchableOpacity>
-                <Text style={styles.logo}>MAROVA</Text>
-                <View style={styles.headerActions}>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Search color={COLORS.text} size={24} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <User color={COLORS.text} size={24} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <ShoppingCart color={COLORS.text} size={24} />
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <Header />
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* Title Section */}
@@ -151,39 +130,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
-    },
-    promoBar: {
-        backgroundColor: '#2D1E1E',
-        paddingVertical: SPACING.sm,
-        alignItems: 'center',
-    },
-    promoText: {
-        color: '#FFFFFF',
-        fontSize: 10,
-        fontWeight: 'bold',
-        letterSpacing: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: SPACING.md,
-        height: 60,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
-    },
-    logo: {
-        fontSize: 22,
-        fontWeight: '700',
-        letterSpacing: 2,
-        color: COLORS.text,
-    },
-    headerActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    iconButton: {
-        marginLeft: SPACING.sm,
     },
     scrollContent: {
         paddingBottom: 100, // For tab bar

@@ -5,7 +5,7 @@ export const COLORS = {
     surface: '#F2F2F7',
     text: '#000000',
     textMuted: '#666666',
-    accent: '#A69B8F', // Out of stock / secondary accent
+    accent: '#A69B8F',
     error: '#FF3B30',
     border: '#E5E5EA',
 };
