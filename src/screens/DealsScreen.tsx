@@ -1,292 +1,275 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
+    FlatList,
     TouchableOpacity,
-    Image,
+    ActivityIndicator,
     Dimensions,
 } from 'react-native';
-import { Menu, Search, ShoppingCart, User, Bell, SlidersHorizontal, Plus } from 'lucide-react-native';
-import { COLORS, SPACING } from '../theme/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Header } from '../core/components/Header/Header';
+import { ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react-native';
+import { COLORS, SPACING } from '../theme/theme';
+
+import useProductStore from '../zustand/useProductStore';
+import { ProductCard } from '../imports/HomeScreen/components/ProductCard';
+import { SortBySelector } from '../imports/Categories/components/SortBySelector';
+import { FilterModal } from '../imports/Categories/components/FilterModal';
 
 const { width } = Dimensions.get('window');
-const PRODUCT_WIDTH = (width - SPACING.md * 3) / 2;
 
 export const DealsScreen = () => {
-    return (
-        <SafeAreaView style={styles.container}>
-            <Header />
+    const {
+        fetchProducts,
+        isLoading,
+        paginatedProducts,
+        currentPage,
+        totalPages,
+        goToPage,
+        products,
+        filters,
+    } = useProductStore();
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {/* Title Section */}
-                <View style={styles.titleSection}>
-                    <Text style={styles.title}>All products</Text>
-                    <View style={styles.divider} />
-                </View>
+    const [filterModalVisible, setFilterModalVisible] = useState(false);
 
-                {/* Filters */}
-                <TouchableOpacity style={styles.filterButton}>
-                    <SlidersHorizontal color={COLORS.text} size={18} />
-                    <Text style={styles.filterText}>All filters</Text>
-                    <View style={styles.chevron} />
+    const activeFilterCount =
+        filters.gender.length +
+        filters.size.length +
+        (filters.price[0] !== 0 || filters.price[1] !== 1500 ? 1 : 0);
+
+    useEffect(() => {
+        if (products.length === 0) {
+            fetchProducts();
+        }
+    }, []);
+
+    const currentProducts = paginatedProducts();
+
+    const renderPagination = () => {
+        if (totalPages <= 1) return null;
+
+        return (
+            <View style={styles.pagination}>
+                <TouchableOpacity
+                    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+                    onPress={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    <ChevronLeft size={20} color={currentPage === 1 ? '#CCC' : COLORS.text} />
                 </TouchableOpacity>
 
-                {/* Products Grid */}
-                <View style={styles.productsGrid}>
-                    {PRODUCTS.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                <View style={styles.pageNumbers}>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <TouchableOpacity
+                            key={i}
+                            style={[styles.pageNumber, currentPage === i + 1 && styles.activePageNumber]}
+                            onPress={() => goToPage(i + 1)}
+                        >
+                            <Text
+                                style={[
+                                    styles.pageText,
+                                    currentPage === i + 1 && styles.activePageText,
+                                ]}
+                            >
+                                {i + 1}
+                            </Text>
+                        </TouchableOpacity>
                     ))}
                 </View>
-            </ScrollView>
+
+                <TouchableOpacity
+                    style={[styles.pageButton, currentPage === totalPages && styles.disabledButton]}
+                    onPress={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    <ChevronRight size={20} color={currentPage === totalPages ? '#CCC' : COLORS.text} />
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+
+
+            <View style={styles.content}>
+                <Text style={styles.title}>All Collections</Text>
+
+                <View style={styles.filterRow}>
+                    <TouchableOpacity
+                        style={styles.filterButton}
+                        onPress={() => setFilterModalVisible(true)}
+                    >
+                        <Text style={styles.filterButtonText}>All Filters</Text>
+                        <SlidersHorizontal size={16} color={COLORS.text} />
+                        {activeFilterCount > 0 && (
+                            <View style={styles.filterBadge}>
+                                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    <SortBySelector />
+                </View>
+
+                <View style={styles.divider} />
+
+                {isLoading ? (
+                    <View style={styles.loaderContainer}>
+                        <ActivityIndicator size="large" color={COLORS.primary} />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={currentProducts}
+                        numColumns={2}
+                        renderItem={({ item }) => (
+                            <View style={styles.cardWrapper}>
+                                <ProductCard product={item} />
+                            </View>
+                        )}
+                        keyExtractor={(item) => item._id}
+                        contentContainerStyle={styles.gridContent}
+                        ListEmptyComponent={() => (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>No Products Found..</Text>
+                            </View>
+                        )}
+                        ListFooterComponent={renderPagination}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )}
+            </View>
+
+            <FilterModal
+                visible={filterModalVisible}
+                onClose={() => setFilterModalVisible(false)}
+            />
         </SafeAreaView>
     );
 };
-
-const ProductCard = ({ product }: { product: any }) => (
-    <View style={styles.productCard}>
-        <View style={styles.imageContainer}>
-            <Image source={{ uri: product.image }} style={styles.productImage} />
-            {product.isNew && (
-                <View style={styles.newBadge}>
-                    <Plus size={12} color={COLORS.text} />
-                    <Text style={styles.newBadgeText}>New In</Text>
-                </View>
-            )}
-        </View>
-        <View style={styles.productInfo}>
-            <Text style={styles.productCategory}>{product.category}</Text>
-            <Text style={styles.productName}>{product.name}</Text>
-            <View style={styles.priceRow}>
-                <View style={styles.priceContainer}>
-                    <Text style={styles.price}>₹{product.price.toFixed(2)}</Text>
-                </View>
-                <View style={styles.sizeContainer}>
-                    <Text style={styles.sizeText}>{product.size}</Text>
-                </View>
-            </View>
-
-            {product.inStock ? (
-                <TouchableOpacity style={styles.addToCartButton}>
-                    <ShoppingCart size={16} color={COLORS.background} />
-                    <Text style={styles.addToCartText}>Add to cart</Text>
-                </TouchableOpacity>
-            ) : (
-                <View style={[styles.addToCartButton, styles.outOfStockButton]}>
-                    <Text style={styles.outOfStockText}>Out Of Stock</Text>
-                </View>
-            )}
-        </View>
-    </View>
-);
-
-const PRODUCTS = [
-    {
-        id: '1',
-        name: 'IVORYN',
-        category: 'PARFUM FOR Women',
-        price: 899,
-        size: '50 ML',
-        image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80',
-        inStock: true,
-        isNew: false,
-    },
-    {
-        id: '2',
-        name: 'BOURNE',
-        category: 'PARFUM FOR Men',
-        price: 899,
-        size: '50 ML',
-        image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80',
-        inStock: false,
-        isNew: true,
-    },
-    {
-        id: '3',
-        name: 'IVORYN',
-        category: 'PARFUM FOR Women',
-        price: 899,
-        size: '50 ML',
-        image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80',
-        inStock: true,
-        isNew: false,
-    },
-    {
-        id: '4',
-        name: 'BOURNE',
-        category: 'PARFUM FOR Men',
-        price: 899,
-        size: '50 ML',
-        image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80',
-        inStock: true,
-        isNew: false,
-    },
-];
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
     },
-    scrollContent: {
-        paddingBottom: 100, // For tab bar
-    },
-    titleSection: {
-        padding: SPACING.md,
+    content: {
+        flex: 1,
+        paddingHorizontal: SPACING.md,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         color: COLORS.text,
-        marginBottom: SPACING.sm,
+        marginVertical: SPACING.md,
     },
-    divider: {
-        height: 1,
-        backgroundColor: COLORS.border,
-        width: '100%',
+    filterRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: SPACING.md,
     },
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        alignSelf: 'flex-start',
-        marginHorizontal: SPACING.md,
-        marginVertical: SPACING.md,
-        paddingHorizontal: SPACING.md,
-        paddingVertical: SPACING.sm,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        borderRadius: 25,
-    },
-    filterText: {
-        marginLeft: SPACING.sm,
-        fontSize: 16,
-        color: COLORS.text,
-    },
-    chevron: {
-        marginLeft: SPACING.sm,
-        width: 0,
-        height: 0,
-        borderLeftWidth: 5,
-        borderRightWidth: 5,
-        borderTopWidth: 5,
-        borderLeftColor: 'transparent',
-        borderRightColor: 'transparent',
-        borderTopColor: COLORS.text,
-    },
-    productsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        paddingHorizontal: SPACING.md,
-        justifyContent: 'space-between',
-    },
-    productCard: {
-        width: PRODUCT_WIDTH,
-        marginBottom: SPACING.lg,
-        borderRadius: 8,
-        overflow: 'hidden',
-        backgroundColor: COLORS.background,
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-    },
-    imageContainer: {
-        width: '100%',
-        height: PRODUCT_WIDTH * 1.2,
-        position: 'relative',
-    },
-    productImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-    },
-    newBadge: {
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    newBadgeText: {
-        fontSize: 10,
-        fontWeight: '600',
-        marginLeft: 2,
-        color: COLORS.text,
-    },
-    productInfo: {
-        padding: SPACING.sm,
-    },
-    productCategory: {
-        fontSize: 10,
-        color: COLORS.secondary,
-        textTransform: 'uppercase',
-        marginBottom: 4,
-    },
-    productName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: 8,
-    },
-    priceRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    priceContainer: {
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
-    },
-    price: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: COLORS.text,
-    },
-    sizeContainer: {
-        backgroundColor: '#F7F7F7',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
-    },
-    sizeText: {
-        fontSize: 12,
-        color: COLORS.text,
-        fontWeight: '600',
-    },
-    addToCartButton: {
-        backgroundColor: '#1A1A1A',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: 16,
         paddingVertical: 10,
-        borderRadius: 6,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        gap: 8,
+        position: 'relative', // Necessary for badge positioning
     },
-    addToCartText: {
-        color: '#FFFFFF',
-        fontWeight: '600',
+    filterButtonText: {
         fontSize: 14,
-        marginLeft: 8,
-    },
-    outOfStockButton: {
-        backgroundColor: '#B4A69A',
-    },
-    outOfStockText: {
-        color: '#FFFFFF',
+        color: COLORS.text,
         fontWeight: '600',
+    },
+    filterBadge: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        backgroundColor: '#000000',
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#FFFFFF',
+    },
+    filterBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: COLORS.border,
+        marginBottom: SPACING.lg,
+    },
+    gridContent: {
+        paddingBottom: 100, // Extra space for tabBar
+    },
+    cardWrapper: {
+        flex: 0.5,
+        // Remove fixed width from ProductCard if needed or ensure it fits
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: 100,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: COLORS.textMuted,
+    },
+    pagination: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: SPACING.xl,
+        marginBottom: 40,
+        gap: SPACING.sm,
+    },
+    pageNumbers: {
+        flexDirection: 'row',
+        gap: SPACING.xs,
+    },
+    pageNumber: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    activePageNumber: {
+        backgroundColor: COLORS.text,
+    },
+    pageText: {
         fontSize: 14,
+        color: COLORS.text,
+    },
+    activePageText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+    },
+    pageButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    disabledButton: {
+        opacity: 0.5,
     },
 });

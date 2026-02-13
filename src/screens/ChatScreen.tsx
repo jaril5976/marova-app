@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING } from '../theme/theme';
-import { Header } from '../core/components/Header/Header';
+
 
 export const ChatScreen = () => (
     <SafeAreaView style={styles.container}>
-        <Header />
+
         <ScrollView contentContainerStyle={styles.centerContent}>
             <Text style={styles.text}>Chat Screen</Text>
         </ScrollView>

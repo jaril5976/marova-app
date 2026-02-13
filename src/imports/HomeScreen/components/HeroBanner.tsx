@@ -76,19 +76,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ bannerSlides }) => {
                     )}
                 </View>
 
-                {/* Top Gradient Overlay */}
-                <View style={styles.topGradientOverlay}>
-                    <Svg height="100%" width="100%">
-                        <Defs>
-                            <LinearGradient id="topGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-                                <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-                            </LinearGradient>
-                        </Defs>
-                        <Rect x="0" y="0" width="100%" height="100%" fill="url(#topGrad)" />
-                    </Svg>
-                </View>
-
                 {/* Bottom Gradient Overlay */}
                 <View style={styles.gradientOverlay}>
                     <Svg height="100%" width="100%">
@@ -149,13 +136,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ bannerSlides }) => {
 
 const styles = StyleSheet.create({
     container: {
-        height: 300,
+        height: 400,
         position: 'relative',
     },
     slide: {
         width: width,
-        // borderRadius: 50,
-        height: 300,
+        height: 400,
         justifyContent: 'flex-start',
         paddingHorizontal: SPACING.md,
     },
@@ -164,6 +150,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         flex: 1,
+        marginTop: 80,
     },
     textSection: {
         flex: 1.2,
@@ -228,14 +215,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: 80, // Adjust height as needed
-        pointerEvents: 'none',
-    },
-    topGradientOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 200, // Slightly taller for better dark fade
         pointerEvents: 'none',
     },
 });

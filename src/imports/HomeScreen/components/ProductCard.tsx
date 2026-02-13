@@ -4,19 +4,30 @@ import { COLORS, SPACING } from '../../../theme/theme';
 import { Product } from '../../../zustand/useProductStore';
 import { ShoppingBag } from 'lucide-react-native';
 
+import { useNavigation } from '@react-navigation/native';
+
 interface ProductCardProps {
     product: Product;
     onPress?: (product: Product) => void;
 }
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.45; // 45% of screen width
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.43;
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
+    const navigation = useNavigation<any>();
     const { title, price, featuredImage, isNewArrival, sizes } = product;
 
+    const handlePress = () => {
+        if (onPress) {
+            onPress(product);
+        } else {
+            navigation.push('ProductDetail', { productId: product._id });
+        }
+    };
+
     return (
-        <TouchableOpacity style={styles.card} onPress={() => onPress?.(product)}>
+        <TouchableOpacity style={styles.card} onPress={handlePress}>
             <View style={styles.imageContainer}>
                 {featuredImage?.src ? (
                     <Image source={{ uri: featuredImage.src }} style={styles.image} resizeMode="cover" />
@@ -65,14 +76,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
 
 const styles = StyleSheet.create({
     card: {
-        width: CARD_WIDTH,
+        width: CARD_WIDTH, // Default width for horizontal list
         backgroundColor: COLORS.background,
         borderRadius: 8,
         borderWidth: 1,
         borderColor: COLORS.border,
         overflow: 'hidden',
         marginRight: SPACING.md,
-        marginBottom: SPACING.sm,
+        marginBottom: SPACING.md,
     },
     imageContainer: {
         position: 'relative',

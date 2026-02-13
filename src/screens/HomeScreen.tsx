@@ -19,7 +19,7 @@ import useProductStore, { Product } from '../zustand/useProductStore';
 import { CustomerVideoReviewsEntity } from '../imports/HomeScreen/types';
 import { ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Header } from '../core/components/Header/Header';
+
 
 const { width } = Dimensions.get('window');
 const PRODUCT_WIDTH = (width - SPACING.md * 3) / 2;
@@ -48,8 +48,8 @@ export const HomeScreen = () => {
     const newArrivals = products.filter((item: Product) => item.isNewArrival);
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Header />
+        <View style={styles.container}>
+
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {loading ? (
@@ -78,7 +78,7 @@ export const HomeScreen = () => {
                 )}
 
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background,
     },
     scrollContent: {
-        paddingBottom: Platform.OS === 'ios' ? 45 : 60,
+        paddingBottom: 100,
     },
     loadingContainer: {
         height: 450,

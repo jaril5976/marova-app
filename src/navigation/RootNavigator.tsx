@@ -1,16 +1,18 @@
 import { View, StyleSheet, Dimensions, Platform, TouchableOpacity, Text, Animated } from 'react-native';
 import { useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Home, Grid, Tag, User, MessageCircle } from 'lucide-react-native';
+import { Home, Tag, User, MessageCircle, ShoppingCart } from 'lucide-react-native';
 import { HomeScreen } from '../screens/HomeScreen';
-import { COLORS } from '../theme/theme';
 import { DealsScreen } from '../screens/DealsScreen';
-import { CategoriesScreen } from '../screens/CategoriesScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { ChatScreen } from '../screens/ChatScreen';
+import { CartScreen } from '../screens/CartScreen';
+
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     const { width } = Dimensions.get('window');
@@ -92,13 +94,13 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     );
 };
 
-export const RootNavigator = () => {
+const TabNavigator = () => {
     return (
         <Tab.Navigator
             tabBar={(props) => <CustomTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
-                animation: 'fade',
+                animation: 'shift',
             }}
         >
             <Tab.Screen
@@ -109,17 +111,17 @@ export const RootNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Categories"
-                component={CategoriesScreen}
-                options={{
-                    tabBarIcon: (props) => <Grid {...props} />,
-                }}
-            />
-            <Tab.Screen
                 name="Deals"
                 component={DealsScreen}
                 options={{
                     tabBarIcon: (props) => <Tag {...props} />,
+                }}
+            />
+            <Tab.Screen
+                name="Cart"
+                component={CartScreen}
+                options={{
+                    tabBarIcon: (props) => <ShoppingCart {...props} />,
                 }}
             />
             <Tab.Screen
@@ -137,6 +139,21 @@ export const RootNavigator = () => {
                 }}
             />
         </Tab.Navigator>
+    );
+}
+
+export const RootNavigator = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen
+                name="ProductDetail"
+                component={ProductDetailScreen}
+                options={{
+                    animation: 'ios_from_right',
+                }}
+            />
+        </Stack.Navigator>
     );
 };
 
