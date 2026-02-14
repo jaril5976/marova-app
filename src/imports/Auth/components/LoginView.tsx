@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
     View,
@@ -11,9 +12,13 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { COLORS, SPACING } from '../../../theme/theme';
+import { useAuth } from '../../../hooks/useAuth';
 import useAuthStore from '../../../zustand/useAuthStore';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -22,21 +27,43 @@ interface LoginScreenProps {
 }
 
 export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
-    const { identifier, setIdentifier } = useAuthStore();
-    const [inputValue, setInputValue] = useState(identifier || '');
+    const { identifier: storedIdentifier, setIdentifier } = useAuthStore();
+    const { sendOtp, isSendingOtp } = useAuth();
+    const [inputValue, setInputValue] = useState(storedIdentifier || '');
 
-    const handleLogin = () => {
-        if (inputValue.trim()) {
-            setIdentifier(inputValue.trim());
+    const handleLogin = async () => {
+        const trimmedValue = inputValue.trim();
+        if (!trimmedValue) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Please enter an email or phone number',
+                position: 'top',
+            });
+            return;
+        }
+
+        setIdentifier(trimmedValue);
+
+        const isEmail = trimmedValue.includes('@');
+        const payload = isEmail ? { email: trimmedValue } : { phone: trimmedValue };
+
+        try {
+            sendOtp(payload);
             onLoginPress();
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to send OTP. Please try again.',
+                position: 'top',
+            });
         }
     };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
-
-                {/* Login Card */}
                 <View style={styles.card}>
                     <Text style={styles.title}>Welcome</Text>
                     <Text style={styles.subtitle}>Enter your email or phone number</Text>
@@ -49,15 +76,23 @@ export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
                         onChangeText={setInputValue}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        editable={!isSendingOtp}
                     />
 
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>Login</Text>
+                    <TouchableOpacity
+                        style={[styles.loginButton, isSendingOtp && { opacity: 0.7 }]}
+                        onPress={handleLogin}
+                        disabled={isSendingOtp}
+                    >
+                        {isSendingOtp ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={styles.loginButtonText}>Login</Text>
+                        )}
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.googleButton}>
                         <View style={styles.googleIconContainer}>
-                            {/* Small Google Color-like dots or simple SVG placeholder */}
                             <Image
                                 source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png' }}
                                 style={styles.googleIcon}
@@ -79,29 +114,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#F9F9F9',
         paddingHorizontal: SPACING.xl,
     },
-    activeDot: {
-        position: 'absolute',
-        top: 2,
-        right: 2,
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: '#FFF',
-        borderWidth: 1,
-        borderColor: '#999',
-    },
     card: {
         width: '100%',
         backgroundColor: '#FFF',
         borderRadius: 24,
         padding: SPACING.xl,
         alignItems: 'center',
-        // Shadow for iOS
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.1,
         shadowRadius: 15,
-        // Shadow for Android
         elevation: 8,
     },
     title: {
@@ -129,7 +151,7 @@ const styles = StyleSheet.create({
     loginButton: {
         width: '100%',
         height: 48,
-        backgroundColor: '#9CA3AF', // Grayish button from image
+        backgroundColor: '#9CA3AF',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',

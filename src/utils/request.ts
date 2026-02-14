@@ -4,6 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+import useAuthStore from '../zustand/useAuthStore';
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -15,7 +16,7 @@ export const request = axios.create();
 export const authRequired = axios.create();
 
 export const getBaseUrl = (): string => {
-  return (NEXT_PUBLIC_BASE_URL as string) || '';
+  return (NEXT_PUBLIC_BASE_URL) || '';
 };
 
 export const addRequestInterceptor = (
@@ -51,21 +52,12 @@ const DEFAULT_BASE_URL = getBaseUrl();
 request.defaults.baseURL = DEFAULT_BASE_URL;
 authRequired.defaults.baseURL = DEFAULT_BASE_URL;
 
-/**
- * Global token storage for synchronous access in interceptors.
- * In React Native, favor setting this after successful login.
- */
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
-};
-
 // Add request interceptor for auth
 authRequired.interceptors.request.use(
   config => {
-    if (authToken) {
-      config.headers.Authorization = `Bearer ${authToken}`;
+    const token = useAuthStore.getState().authToken;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

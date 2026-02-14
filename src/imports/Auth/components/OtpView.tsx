@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -11,9 +12,13 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { COLORS, SPACING } from '../../../theme/theme';
+import { useAuth } from '../../../hooks/useAuth';
 import useAuthStore from '../../../zustand/useAuthStore';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -23,9 +28,11 @@ interface OtpViewProps {
 }
 
 export const OtpView: React.FC<OtpViewProps> = ({ onChangeIdentifier, onVerifySuccess }) => {
-    const { identifier, setToken } = useAuthStore();
+    const { identifier } = useAuthStore();
+    const { verifyOtp, isVerifyingOtp, sendOtp, isSendingOtp, isAuthenticated } = useAuth();
     const [otp, setOtp] = useState(['', '', '', '']);
-    const [timer, setTimer] = useState(22);
+    const [timer, setTimer] = useState(30);
+    const inputs = useRef<Array<TextInput | null>>([]);
 
     useEffect(() => {
         let interval: any;
@@ -37,32 +44,63 @@ export const OtpView: React.FC<OtpViewProps> = ({ onChangeIdentifier, onVerifySu
         return () => clearInterval(interval);
     }, [timer]);
 
+    // Handle authentication success
+    useEffect(() => {
+        if (isAuthenticated) {
+            onVerifySuccess();
+        }
+    }, [isAuthenticated, onVerifySuccess]);
+
     const handleOtpChange = (value: string, index: number) => {
+        if (value.length > 1) {
+            value = value[value.length - 1];
+        }
+
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
 
-        // Auto move focus or verify if all filled
         if (value && index < 3) {
-            // Focus next input logic would go here if we had refs
+            inputs.current[index + 1]?.focus();
         }
 
         if (newOtp.every((digit) => digit !== '') && newOtp.join('').length === 4) {
-            // Simulate verification
-            setTimeout(() => {
-                setToken('dummy-token-' + Date.now());
-                onVerifySuccess();
-            }, 500);
+            const isEmail = identifier?.includes('@');
+            const payload = isEmail
+                ? { email: identifier!, otp: newOtp.join('') }
+                : { phone: identifier!, otp: newOtp.join('') };
+
+            verifyOtp(payload);
         }
+    };
+
+    const handleKeyPress = (e: any, index: number) => {
+        if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+            inputs.current[index - 1]?.focus();
+        }
+    };
+
+    const handleResend = () => {
+        if (timer > 0 || !identifier) return;
+
+        const isEmail = identifier.includes('@');
+        const payload = isEmail ? { email: identifier } : { phone: identifier };
+
+        sendOtp(payload);
+        setTimer(30);
+        Toast.show({
+            type: 'success',
+            text1: 'Success',
+            text2: 'A new OTP has been sent.',
+            position: 'top',
+        });
     };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
-
-                {/* OTP Card */}
                 <View style={styles.card}>
-                    <Text style={styles.title}>Verify Email</Text>
+                    <Text style={styles.title}>Verify Account</Text>
                     <Text style={styles.subtitle}>Enter the 4-digit code sent to</Text>
                     <Text style={styles.identifier}>{identifier}</Text>
 
@@ -70,18 +108,29 @@ export const OtpView: React.FC<OtpViewProps> = ({ onChangeIdentifier, onVerifySu
                         {otp.map((digit, index) => (
                             <TextInput
                                 key={index}
+                                ref={(el) => {
+                                    inputs.current[index] = el;
+                                }}
                                 style={[styles.otpInput, digit !== '' && styles.activeOtpInput]}
                                 value={digit}
                                 onChangeText={(val) => handleOtpChange(val, index)}
+                                onKeyPress={(e) => handleKeyPress(e, index)}
                                 keyboardType="number-pad"
                                 maxLength={1}
+                                editable={!isVerifyingOtp}
                             />
                         ))}
                     </View>
 
-                    <Text style={styles.resendText}>Resend OTP in {timer}s</Text>
+                    {isVerifyingOtp && <ActivityIndicator size="small" color={COLORS.primary} style={{ marginBottom: 16 }} />}
 
-                    <TouchableOpacity onPress={onChangeIdentifier}>
+                    <TouchableOpacity onPress={handleResend} disabled={timer > 0 || isSendingOtp}>
+                        <Text style={[styles.resendText, timer === 0 && { color: COLORS.primary, fontWeight: 'bold' }]}>
+                            {isSendingOtp ? 'Sending...' : timer > 0 ? `Resend OTP in ${timer}s` : 'Resend OTP'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={onChangeIdentifier} disabled={isVerifyingOtp}>
                         <Text style={styles.changeLink}>Change email or phone</Text>
                     </TouchableOpacity>
 
@@ -156,7 +205,7 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
     },
     activeOtpInput: {
-        borderColor: '#6366F1', // Blueish border from image for active focus
+        borderColor: COLORS.primary || '#6366F1',
         borderWidth: 2,
     },
     resendText: {

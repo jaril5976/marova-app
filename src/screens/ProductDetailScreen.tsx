@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { cloneElement, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -6,9 +7,12 @@ import {
     ScrollView,
     TouchableOpacity,
     Platform,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { COLORS, SPACING } from '../theme/theme';
+import Toast from 'react-native-toast-message';
 import { QuantitySelector } from '../core/components/QuantitySelector';
 import { Accordion } from '../core/components/Accordion';
 import { ProductsCardSlider } from '../imports/HomeScreen/components/ProductsCardSlider';
@@ -16,6 +20,7 @@ import { ProductImageGallery } from '../imports/Products/components/ProductImage
 import { ProductInfoHeader } from '../imports/Products/components/ProductInfoHeader';
 import { PolicyCards } from '../imports/Products/components/PolicyCards';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useUnifiedCart } from '../hooks/useUnifiedCart';
 
 import { getProductById } from '../imports/Products/api/api';
 
@@ -25,6 +30,8 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     const [product, setProduct] = useState<any>(null);
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(true);
+    const { addToCart } = useUnifiedCart();
+    const [addingToCart, setAddingToCart] = useState(false);
 
     useEffect(() => {
         fetchProduct();
@@ -41,10 +48,56 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
         }
     };
 
+    const handleAddToCart = async () => {
+        if (!product || product.stockQuantity < 1) return;
+
+        setAddingToCart(true);
+        try {
+            const item = {
+                productId: product._id,
+                title: product.title,
+                price: product.salePrice || product.originalPrice,
+                imageUrl: product.featuredImage?.src,
+                quantity: quantity,
+                size: product.sizes?.[0] || 'Standard',
+            };
+
+            const result = await addToCart(item);
+            if (result.success) {
+                console.log('Product added to cart', result);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: 'Product added to cart 👋',
+                    position: 'top',
+                });
+                navigation.navigate('MainTabs', {
+                    screen: 'Cart',
+                });
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to add product to cart',
+                    position: 'top',
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'An unexpected error occurred',
+                position: 'top',
+            });
+        } finally {
+            setAddingToCart(false);
+        }
+    };
+
     if (loading || !product) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Loading...</Text>
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
     }
@@ -161,11 +214,19 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
                         </Text>
                     </View>
                 ) : (
-                    <TouchableOpacity style={styles.addToCartButton}>
-                        <Text style={styles.addToCartText}>
-                            Add to cart - ₹
-                            {(product.salePrice || product.originalPrice || 0) * quantity}
-                        </Text>
+                    <TouchableOpacity
+                        style={[styles.addToCartButton, addingToCart && { opacity: 0.8 }]}
+                        onPress={handleAddToCart}
+                        disabled={addingToCart}
+                    >
+                        {addingToCart ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={styles.addToCartText}>
+                                Add to cart - ₹
+                                {(product.salePrice || product.originalPrice || 0) * quantity}
+                            </Text>
+                        )}
                     </TouchableOpacity>
                 )}
             </View>

@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { COLORS, SPACING } from '../../../theme/theme';
 import { Product } from '../../../zustand/useProductStore';
 import { ShoppingBag } from 'lucide-react-native';
+import { useUnifiedCart } from '../../../hooks/useUnifiedCart';
+import Toast from 'react-native-toast-message';
 
 import { useNavigation } from '@react-navigation/native';
 
@@ -17,12 +19,62 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.43;
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
     const navigation = useNavigation<any>();
     const { title, price, featuredImage, isNewArrival, sizes } = product;
+    const { addToCart } = useUnifiedCart();
+    const [adding, setAdding] = useState(false);
 
     const handlePress = () => {
         if (onPress) {
             onPress(product);
         } else {
             navigation.push('ProductDetail', { productId: product._id });
+        }
+    };
+
+    const handleAddToCart = async (e: any) => {
+        // Prevent triggering the card's onPress
+        e.stopPropagation();
+
+        if (product.stockQuantity < 1) return;
+
+        setAdding(true);
+        try {
+            const item = {
+                productId: product._id,
+                title: title,
+                price: price,
+                imageUrl: featuredImage?.src,
+                quantity: 1,
+                size: sizes?.[0] || 'Standard',
+            };
+            const result = await addToCart(item);
+            if (result.success) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: 'Product added to cart 👋',
+                    position: 'top',
+                });
+                navigation.navigate('MainTabs', {
+                    screen: 'Cart',
+                });
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to add to cart',
+                    position: 'top',
+                });
+            }
+        } catch (error) {
+            console.error('Add items to cart error', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'An unexpected error occurred',
+                position: 'top',
+            });
+        } finally {
+            setAdding(false);
         }
     };
 
@@ -64,9 +116,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
                         <Text style={styles.buttonText}>Out Of Stock</Text>
                     </View>
                 ) : (
-                    <TouchableOpacity style={styles.button}>
-                        <ShoppingBag size={16} color="#FFF" style={{ marginRight: 4 }} />
-                        <Text style={styles.buttonText}>Add to cart</Text>
+                    <TouchableOpacity style={styles.button} onPress={handleAddToCart} disabled={adding}>
+                        {adding ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                            <>
+                                <ShoppingBag size={16} color="#FFF" style={{ marginRight: 4 }} />
+                                <Text style={styles.buttonText}>Add to cart</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                 )}
             </View>
@@ -76,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
 
 const styles = StyleSheet.create({
     card: {
-        width: CARD_WIDTH, // Default width for horizontal list
+        width: CARD_WIDTH,
         backgroundColor: COLORS.background,
         borderRadius: 8,
         borderWidth: 1,
@@ -182,7 +240,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     outOfStock: {
-        backgroundColor: '#A69B8F', // Use accent color for out of stock or muted
+        backgroundColor: '#A69B8F',
         opacity: 0.7,
     },
     buttonText: {
