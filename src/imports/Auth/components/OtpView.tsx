@@ -19,6 +19,7 @@ import { COLORS, SPACING } from '../../../theme/theme';
 import { useAuth } from '../../../hooks/useAuth';
 import useAuthStore from '../../../zustand/useAuthStore';
 import Toast from 'react-native-toast-message';
+import GoogleIcon from '../../../assets/GoogleIcon';
 
 const { width } = Dimensions.get('window');
 
@@ -136,10 +137,7 @@ export const OtpView: React.FC<OtpViewProps> = ({ onChangeIdentifier, onVerifySu
 
                     <TouchableOpacity style={styles.googleButton}>
                         <View style={styles.googleIconContainer}>
-                            <Image
-                                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png' }}
-                                style={styles.googleIcon}
-                            />
+                            <GoogleIcon />
                         </View>
                         <Text style={styles.googleButtonText}>Login with Google</Text>
                     </TouchableOpacity>
@@ -176,12 +174,12 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.xs,
     },
     subtitle: {
-        fontSize: 12,
+        fontSize: 16,
         color: '#4B5563',
         marginBottom: 4,
     },
     identifier: {
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#374151',
         marginBottom: 20,
@@ -209,12 +207,12 @@ const styles = StyleSheet.create({
         borderWidth: 2,
     },
     resendText: {
-        fontSize: 12,
+        fontSize: 14,
         color: '#6B7280',
         marginBottom: 8,
     },
     changeLink: {
-        fontSize: 12,
+        fontSize: 14,
         color: '#374151',
         textDecorationLine: 'underline',
         marginBottom: 20,
@@ -233,13 +231,9 @@ const styles = StyleSheet.create({
     googleIconContainer: {
         marginRight: 10,
     },
-    googleIcon: {
-        width: 18,
-        height: 18,
-    },
     googleButtonText: {
         color: '#1A1A1A',
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: '600',
     },
 });

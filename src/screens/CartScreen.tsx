@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING } from '../theme/theme';
 import { useUnifiedCart } from '../hooks/useUnifiedCart';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export const CartScreen = () => {
     const { cart, isLoading, updateQuantity, removeFromCart } = useUnifiedCart();
-
+    const tabBarHeight = useBottomTabBarHeight();
     const subtotal = cart.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
 
     if (isLoading) {
@@ -56,7 +57,7 @@ export const CartScreen = () => {
                             </View>
                             <Text style={styles.itemVariant}>{item.size}{item.color ? ` / ${item.color}` : ''}</Text>
                             <View style={styles.priceRow}>
-                                <Text style={styles.itemPrice}>${(item.price || 0).toLocaleString()}</Text>
+                                <Text style={styles.itemPrice}>₹{(item.price || 0).toLocaleString()}</Text>
                                 <View style={styles.quantitySelector}>
                                     <TouchableOpacity
                                         style={styles.qtyButton}
@@ -79,10 +80,10 @@ export const CartScreen = () => {
             </ScrollView>
 
             {/* Sticky Footer */}
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: tabBarHeight }]}>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Subtotal</Text>
-                    <Text style={styles.summaryValue}>${subtotal.toLocaleString()}</Text>
+                    <Text style={styles.summaryValue}>₹{subtotal.toLocaleString()}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Shipping</Text>
@@ -90,7 +91,7 @@ export const CartScreen = () => {
                 </View>
                 <View style={[styles.summaryRow, { marginTop: 8 }]}>
                     <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>${subtotal.toLocaleString()}</Text>
+                    <Text style={styles.totalValue}>₹{subtotal.toLocaleString()}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.checkoutButton}>
@@ -160,18 +161,19 @@ const styles = StyleSheet.create({
         marginBottom: 24,
         backgroundColor: '#FFF',
         borderRadius: 12,
-        overflow: 'hidden',
         // Shadow
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
     },
     itemImage: {
         width: 100,
         height: 120,
         backgroundColor: '#F9F9F9',
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
     },
     itemDetails: {
         flex: 1,
@@ -229,8 +231,8 @@ const styles = StyleSheet.create({
         padding: SPACING.lg,
         backgroundColor: '#FFF',
         borderTopWidth: 1,
-        borderTopColor: '#F3F4F6',
-        marginBottom: 60,
+        borderTopColor: '#888383ff',
+        marginBottom: Platform.OS === 'ios' ? 0 : 15,
     },
     summaryRow: {
         flexDirection: 'row',

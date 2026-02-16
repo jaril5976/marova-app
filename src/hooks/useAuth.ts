@@ -6,6 +6,7 @@ import { useCartStore } from '../zustand/useCartStore';
 import { useLoginMutation } from './useLoginMutation';
 import { useSendOtpMutation } from './useSendOtpMutation';
 import { useVerifyOtpMutation } from './useVerifyOtpMutation';
+import { useUpdateUserMutation } from './useUpdateUserMutation';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function useAuth() {
@@ -17,6 +18,7 @@ export function useAuth() {
     const { loginMutation } = useLoginMutation();
     const { sendOtpMutation } = useSendOtpMutation();
     const { verifyOtpMutation } = useVerifyOtpMutation();
+    const { updateUserMutation } = useUpdateUserMutation();
 
     const login = useCallback(
         (payload: any) => {
@@ -39,6 +41,13 @@ export function useAuth() {
         [verifyOtpMutation]
     );
 
+    const updateUser = useCallback(
+        (payload: any) => {
+            updateUserMutation.mutate(payload);
+        },
+        [updateUserMutation]
+    );
+
     const logout = useCallback(async () => {
         try {
             storeLogout();
@@ -59,9 +68,11 @@ export function useAuth() {
         login,
         sendOtp,
         verifyOtp,
+        updateUser,
         logout,
         authLoginLoading: loginMutation.isPending,
         isSendingOtp: sendOtpMutation.isPending,
         isVerifyingOtp: verifyOtpMutation.isPending,
+        isUpdatingProfile: updateUserMutation.isPending,
     };
 }

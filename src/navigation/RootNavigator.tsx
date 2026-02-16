@@ -10,6 +10,10 @@ import { CartScreen } from '../screens/CartScreen';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
+import { LoginScreen } from '../screens/LoginScreen';
+import { OtpScreen } from '../screens/OtpScreen';
+import { AccountSettingsScreen } from '../screens/AccountSettingsScreen';
+import { ShippingAddressScreen } from '../screens/ShippingAddressScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -125,17 +129,17 @@ const TabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Account"
-                component={AccountScreen}
-                options={{
-                    tabBarIcon: (props) => <User {...props} />,
-                }}
-            />
-            <Tab.Screen
                 name="Chat"
                 component={ChatScreen}
                 options={{
                     tabBarIcon: (props) => <MessageCircle {...props} />,
+                }}
+            />
+            <Tab.Screen
+                name="Account"
+                component={AccountScreen}
+                options={{
+                    tabBarIcon: (props) => <User {...props} />,
                 }}
             />
         </Tab.Navigator>
@@ -153,6 +157,22 @@ export const RootNavigator = () => {
                     animation: 'ios_from_right',
                 }}
             />
+            <Stack.Screen
+                name="AccountSettings"
+                component={AccountSettingsScreen}
+                options={{
+                    animation: 'ios_from_right',
+                }}
+            />
+            <Stack.Screen
+                name="ShippingAddress"
+                component={ShippingAddressScreen}
+                options={{
+                    animation: 'ios_from_right',
+                }}
+            />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Otp" component={OtpScreen} />
         </Stack.Navigator>
     );
 };

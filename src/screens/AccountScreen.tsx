@@ -1,99 +1,93 @@
-
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING } from '../theme/theme';
 import { useAuth } from '../hooks/useAuth';
-import { LoginView } from '../imports/Auth/components/LoginView';
-import { OtpView } from '../imports/Auth/components/OtpView';
-import { User, LogOut, Settings, Package, Heart, MapPin, ChevronRight } from 'lucide-react-native';
+import { User, LogOut, Settings, Package, MapPin, ChevronRight, Mail, Calendar, Smartphone, ChevronDown, ChevronLeft } from 'lucide-react-native';
+
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export const AccountScreen = () => {
     const { isAuthenticated, user, logout } = useAuth();
-    const [authStep, setAuthStep] = useState<'login' | 'otp'>('login');
+    const navigation = useNavigation<any>();
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (!isAuthenticated) {
+                navigation.navigate('Login');
+            }
+        }, [isAuthenticated, navigation])
+    );
 
     if (!isAuthenticated) {
-        if (authStep === 'login') {
-            return (
-                <SafeAreaView style={styles.container}>
-                    <LoginView onLoginPress={() => setAuthStep('otp')} />
-                </SafeAreaView>
-            );
-        }
         return (
             <SafeAreaView style={styles.container}>
-                <OtpView
-                    onChangeIdentifier={() => setAuthStep('login')}
-                    onVerifySuccess={() => { }} //isAuthenticated logic will handle the transition
-                />
+                <View style={{ flex: 1, backgroundColor: COLORS.background }} />
             </SafeAreaView>
         );
     }
 
+    const renderMenu = () => (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* Profile Header */}
+            <View style={styles.profileHeader}>
+                <View style={styles.avatarContainer}>
+                    {user?.firstName ? (
+                        <Text style={styles.avatarText}>{user.firstName[0]}{user?.lastName?.[0]}</Text>
+                    ) : (
+                        <User size={40} color={COLORS.textMuted} />
+                    )}
+                </View>
+                <View style={styles.profileInfo}>
+                    <Text style={styles.userName}>{user?.firstName || 'User'} {user?.lastName || ''}</Text>
+                    <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
+                </View>
+            </View>
+
+            {/* Account Sections */}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>My Account</Text>
+
+                <TouchableOpacity style={styles.menuItem}>
+                    <View style={styles.menuItemLeft}>
+                        <Package size={20} color={COLORS.text} />
+                        <Text style={styles.menuItemText}>My Orders</Text>
+                    </View>
+                    <ChevronRight size={20} color={COLORS.textMuted} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ShippingAddress')}>
+                    <View style={styles.menuItemLeft}>
+                        <MapPin size={20} color={COLORS.text} />
+                        <Text style={styles.menuItemText}>Shipping Addresses</Text>
+                    </View>
+                    <ChevronRight size={20} color={COLORS.textMuted} />
+                </TouchableOpacity>
+
+            </View>
+
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Settings</Text>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AccountSettings')}>
+                    <View style={styles.menuItemLeft}>
+                        <Settings size={20} color={COLORS.text} />
+                        <Text style={styles.menuItemText}>Account Settings</Text>
+                    </View>
+                    <ChevronRight size={20} color={COLORS.textMuted} />
+                </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                <LogOut size={20} color="#D16060" />
+                <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+        </ScrollView>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Profile Header */}
-                <View style={styles.profileHeader}>
-                    <View style={styles.avatarContainer}>
-                        {user?.firstName ? (
-                            <Text style={styles.avatarText}>{user.firstName[0]}{user?.lastName?.[0]}</Text>
-                        ) : (
-                            <User size={40} color={COLORS.textMuted} />
-                        )}
-                    </View>
-                    <View style={styles.profileInfo}>
-                        <Text style={styles.userName}>{user?.firstName || 'User'} {user?.lastName || ''}</Text>
-                        <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
-                    </View>
-                </View>
-
-                {/* Account Sections */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>My Account</Text>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <View style={styles.menuItemLeft}>
-                            <Package size={20} color={COLORS.text} />
-                            <Text style={styles.menuItemText}>My Orders</Text>
-                        </View>
-                        <ChevronRight size={20} color={COLORS.textMuted} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <View style={styles.menuItemLeft}>
-                            <MapPin size={20} color={COLORS.text} />
-                            <Text style={styles.menuItemText}>Shipping Addresses</Text>
-                        </View>
-                        <ChevronRight size={20} color={COLORS.textMuted} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <View style={styles.menuItemLeft}>
-                            <Heart size={20} color={COLORS.text} />
-                            <Text style={styles.menuItemText}>Wishlist</Text>
-                        </View>
-                        <ChevronRight size={20} color={COLORS.textMuted} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Settings</Text>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <View style={styles.menuItemLeft}>
-                            <Settings size={20} color={COLORS.text} />
-                            <Text style={styles.menuItemText}>Account Settings</Text>
-                        </View>
-                        <ChevronRight size={20} color={COLORS.textMuted} />
-                    </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-                    <LogOut size={20} color="#D16060" />
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
-            </ScrollView>
+            {renderMenu()}
         </SafeAreaView>
     );
 };
@@ -147,6 +141,69 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.text,
         marginBottom: 16,
+    },
+    viewHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 24,
+    },
+    backButton: {
+        padding: 4,
+        marginLeft: -4,
+    },
+    viewTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    inputGroup: {
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        color: COLORS.text,
+        marginBottom: 8,
+        fontWeight: '500',
+    },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        height: 48,
+        backgroundColor: COLORS.background,
+    },
+    inputIcon: {
+        marginRight: 10,
+    },
+    inputIconRight: {
+        marginLeft: 10,
+    },
+    input: {
+        flex: 1,
+        fontSize: 14,
+        color: COLORS.text,
+        height: '100%',
+    },
+    updateButton: {
+        backgroundColor: '#1A1A1A',
+        borderRadius: 8,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 16,
+    },
+    disabledButton: {
+        opacity: 0.7,
+    },
+    updateButtonText: {
+        color: COLORS.background,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     menuItem: {
         flexDirection: 'row',

@@ -19,17 +19,35 @@ import { COLORS, SPACING } from '../../../theme/theme';
 import { useAuth } from '../../../hooks/useAuth';
 import useAuthStore from '../../../zustand/useAuthStore';
 import Toast from 'react-native-toast-message';
+import { X } from 'lucide-react-native';
+import GoogleIcon from '../../../assets/GoogleIcon';
 
 const { width } = Dimensions.get('window');
 
 interface LoginScreenProps {
     onLoginPress: () => void;
+    onClose?: () => void;
 }
 
-export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
+export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress, onClose }) => {
     const { identifier: storedIdentifier, setIdentifier } = useAuthStore();
     const { sendOtp, isSendingOtp } = useAuth();
     const [inputValue, setInputValue] = useState(storedIdentifier || '');
+
+    const validateInput = (text: string) => {
+        const trimmed = text.trim();
+        if (trimmed.includes('@')) {
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(trimmed);
+        } else {
+            // Mobile number validation (10 digits)
+            const phoneRegex = /^\d{10}$/;
+            return phoneRegex.test(trimmed);
+        }
+    };
+
+    const isValid = validateInput(inputValue);
 
     const handleLogin = async () => {
         const trimmedValue = inputValue.trim();
@@ -64,6 +82,15 @@ export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
+                {onClose && (
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={onClose}
+                        activeOpacity={0.7}
+                    >
+                        <X color="#FFF" size={20} />
+                    </TouchableOpacity>
+                )}
                 <View style={styles.card}>
                     <Text style={styles.title}>Welcome</Text>
                     <Text style={styles.subtitle}>Enter your email or phone number</Text>
@@ -80,9 +107,12 @@ export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
                     />
 
                     <TouchableOpacity
-                        style={[styles.loginButton, isSendingOtp && { opacity: 0.7 }]}
+                        style={[
+                            styles.loginButton,
+                            (!isValid || isSendingOtp) && styles.disabledButton,
+                        ]}
                         onPress={handleLogin}
-                        disabled={isSendingOtp}
+                        disabled={!isValid || isSendingOtp}
                     >
                         {isSendingOtp ? (
                             <ActivityIndicator color="#FFF" />
@@ -93,10 +123,7 @@ export const LoginView: React.FC<LoginScreenProps> = ({ onLoginPress }) => {
 
                     <TouchableOpacity style={styles.googleButton}>
                         <View style={styles.googleIconContainer}>
-                            <Image
-                                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png' }}
-                                style={styles.googleIcon}
-                            />
+                            <GoogleIcon />
                         </View>
                         <Text style={styles.googleButtonText}>Login with Google</Text>
                     </TouchableOpacity>
@@ -113,6 +140,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#F9F9F9',
         paddingHorizontal: SPACING.xl,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        zIndex: 10,
+        padding: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 20,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     card: {
         width: '100%',
@@ -133,7 +173,7 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.xs,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#4B5563',
         marginBottom: SPACING.xl,
     },
@@ -144,14 +184,14 @@ const styles = StyleSheet.create({
         borderColor: '#E5E7EB',
         borderRadius: 8,
         paddingHorizontal: 16,
-        fontSize: 14,
+        fontSize: 16,
         color: '#1A1A1A',
         marginBottom: 16,
     },
     loginButton: {
         width: '100%',
         height: 48,
-        backgroundColor: '#9CA3AF',
+        backgroundColor: '#000',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
@@ -161,6 +201,10 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    disabledButton: {
+        opacity: 0.5,
+        backgroundColor: '#969697',
     },
     googleButton: {
         width: '100%',
@@ -176,13 +220,9 @@ const styles = StyleSheet.create({
     googleIconContainer: {
         marginRight: 10,
     },
-    googleIcon: {
-        width: 18,
-        height: 18,
-    },
     googleButtonText: {
         color: '#1A1A1A',
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: '600',
     },
 });
