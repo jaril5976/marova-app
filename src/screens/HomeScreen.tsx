@@ -4,10 +4,6 @@ import {
     Text,
     StyleSheet,
     ScrollView,
-    TouchableOpacity,
-    Image,
-    Dimensions,
-    Platform,
 } from 'react-native';
 import { COLORS, SPACING } from '../theme/theme';
 import { HeroBanner } from '../imports/HomeScreen/components/HeroBanner';
@@ -18,13 +14,11 @@ import { getCustomerVideoReviews } from '../imports/HomeScreen/api/api';
 import useProductStore, { Product } from '../zustand/useProductStore';
 import { CustomerVideoReviewsEntity } from '../imports/HomeScreen/types';
 import { ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCurrentUser } from '../imports/User/hooks/useCurrentUser';
 
-
-const { width } = Dimensions.get('window');
-const PRODUCT_WIDTH = (width - SPACING.md * 3) / 2;
 
 export const HomeScreen = () => {
+    const { currentUserData } = useCurrentUser();
     const { bannerSlides, loading, error } = useHeroBanner();
     const { products, fetchProducts, isLoading } = useProductStore();
     const [videoReviews, setVideoReviews] = React.useState<CustomerVideoReviewsEntity | null>(null);

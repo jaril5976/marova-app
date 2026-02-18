@@ -36,5 +36,5 @@ export const authVerifyOtpRequest = (payload: AuthVerifyOtpRequestPayload) => {
 };
 
 export const updateUserRequest = (payload: any) => {
-    return authRequired.post(`${path}/user/update-user`, payload);
+    return authRequired.put(`${path}/user/update-user`, payload);
 };

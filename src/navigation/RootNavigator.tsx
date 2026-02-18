@@ -14,6 +14,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { OtpScreen } from '../screens/OtpScreen';
 import { AccountSettingsScreen } from '../screens/AccountSettingsScreen';
 import { ShippingAddressScreen } from '../screens/ShippingAddressScreen';
+import { useUnifiedCart } from '../hooks/useUnifiedCart';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -22,6 +23,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
     const { width } = Dimensions.get('window');
     const tabWidth = width / state.routes.length;
     const translateX = useRef(new Animated.Value(0)).current;
+    const { cart } = useUnifiedCart();
+    const totalItems = cart.reduce((total, item) => total + (item.quantity ?? 0), 0);
 
     useEffect(() => {
         Animated.spring(translateX, {
@@ -83,6 +86,11 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                                     typeof IconComponent === 'function'
                                         ? IconComponent({ color: isFocused ? '#000' : '#A69B8F', focused: isFocused, size: 24 })
                                         : <IconComponent color={isFocused ? '#000' : '#A69B8F'} size={24} />
+                                )}
+                                {route.name === 'Cart' && totalItems > 0 && (
+                                    <View style={styles.badgeContainer}>
+                                        <Text style={styles.badgeText}>{totalItems}</Text>
+                                    </View>
                                 )}
                             </View>
                             {!isFocused && (
@@ -239,5 +247,25 @@ const styles = StyleSheet.create({
     },
     tabLabelActive: {
         color: '#FFFFFF',
-    }
+    },
+    badgeContainer: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        backgroundColor: '#FF3B30',
+        borderRadius: 10,
+        minWidth: 18,
+        height: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+        borderWidth: 1.5,
+        borderColor: '#000000',
+        zIndex: 10,
+    },
+    badgeText: {
+        color: '#FFFFFF',
+        fontSize: 10,
+        fontWeight: '700',
+    },
 });

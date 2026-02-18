@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING } from '../theme/theme';
 import { useAuth } from '../hooks/useAuth';
+import { useCurrentUser } from '../imports/User/hooks/useCurrentUser';
 import { User, LogOut, Settings, Package, MapPin, ChevronRight, Mail, Calendar, Smartphone, ChevronDown, ChevronLeft } from 'lucide-react-native';
 
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export const AccountScreen = () => {
-    const { isAuthenticated, user, logout } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
+    const { currentUserData: user } = useCurrentUser();
     const navigation = useNavigation<any>();
 
     useFocusEffect(
@@ -79,7 +81,7 @@ export const AccountScreen = () => {
             </View>
 
             <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-                <LogOut size={20} color="#D16060" />
+                <LogOut size={20} color="#ff0000ca" />
                 <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
         </ScrollView>
@@ -228,9 +230,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: 16,
         marginTop: 8,
+        backgroundColor: '#ff000015',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ff000050',
     },
     logoutText: {
-        color: '#D16060',
+        color: '#ff0000ca',
         fontWeight: 'bold',
         fontSize: 16,
         marginLeft: 8,

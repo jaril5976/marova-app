@@ -42,8 +42,8 @@ export function useAuth() {
     );
 
     const updateUser = useCallback(
-        (payload: any) => {
-            updateUserMutation.mutate(payload);
+        (payload: any, options?: any) => {
+            updateUserMutation.mutate(payload, options);
         },
         [updateUserMutation]
     );

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING } from '../theme/theme';
 import { useAuth } from '../hooks/useAuth';
+import { useCurrentUser } from '../imports/User/hooks/useCurrentUser';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -18,32 +19,36 @@ const FormInput = ({ label, value, onChangeText, placeholder, icon: Icon, keyboa
                 placeholder={placeholder}
                 placeholderTextColor={COLORS.textMuted}
                 keyboardType={keyboardType}
+                autoCapitalize={label === 'Zip Code' ? 'none' : 'words'}
             />
         </View>
     </View>
 );
 
 export const ShippingAddressScreen = () => {
-    const { user, updateUser, isUpdatingProfile } = useAuth();
-    const navigation = useNavigation();
+    const { currentUserData } = useCurrentUser();
+    const { updateUser, isUpdatingProfile } = useAuth();
+    const navigation = useNavigation<any>();
 
-    const defaultAddress = user?.addresses?.[0] || { street: '', city: '', zip: '' };
+    const defaultAddress = currentUserData?.addresses?.[0] || { street: '', city: '', zip: '' };
     const [street, setStreet] = useState(defaultAddress.street);
     const [city, setCity] = useState(defaultAddress.city);
     const [zip, setZip] = useState(defaultAddress.zip);
 
     useEffect(() => {
-        if (user) {
-            const addr = user.addresses?.[0] || { street: '', city: '', zip: '' };
+        if (currentUserData) {
+            const addr = currentUserData.addresses?.[0] || { street: '', city: '', zip: '' };
             setStreet(addr.street);
             setCity(addr.city);
             setZip(addr.zip);
         }
-    }, [user]);
+    }, [currentUserData]);
+
+    const isFormValid = street.trim() !== '' && city.trim() !== '' && zip.trim() !== '';
 
     const handleUpdate = () => {
         const payload = {
-            ...user,
+            ...currentUserData,
             addresses: [
                 {
                     ...defaultAddress,
@@ -53,7 +58,11 @@ export const ShippingAddressScreen = () => {
                 }
             ]
         };
-        updateUser(payload);
+        updateUser(payload, {
+            onSuccess: () => {
+                navigation.navigate('MainTabs', { screen: 'Account' });
+            }
+        });
     };
 
     return (
@@ -71,28 +80,31 @@ export const ShippingAddressScreen = () => {
                     label="Street"
                     value={street}
                     onChangeText={setStreet}
-                    placeholder="Enter street"
+                    placeholder="House No, Street, Area"
                 />
 
                 <FormInput
                     label="City"
                     value={city}
                     onChangeText={setCity}
-                    placeholder="Enter city"
+                    placeholder="City"
                 />
 
                 <FormInput
                     label="Zip Code"
                     value={zip}
                     onChangeText={setZip}
-                    placeholder="Enter zip code"
+                    placeholder="Zip"
                     keyboardType="numeric"
                 />
 
                 <TouchableOpacity
-                    style={[styles.updateButton, isUpdatingProfile && styles.disabledButton]}
+                    style={[
+                        styles.updateButton,
+                        (isUpdatingProfile || !isFormValid) && styles.disabledButton
+                    ]}
                     onPress={handleUpdate}
-                    disabled={isUpdatingProfile}
+                    disabled={isUpdatingProfile || !isFormValid}
                 >
                     {isUpdatingProfile ? (
                         <ActivityIndicator color={COLORS.background} />
