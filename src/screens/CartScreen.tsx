@@ -6,9 +6,11 @@ import { COLORS, SPACING } from '../theme/theme';
 import { useUnifiedCart } from '../hooks/useUnifiedCart';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 
 export const CartScreen = () => {
     const { cart, isLoading, updateQuantity, removeFromCart } = useUnifiedCart();
+    const navigation = useNavigation<any>();
     const tabBarHeight = useBottomTabBarHeight();
     const subtotal = cart.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 1), 0);
 
@@ -94,7 +96,10 @@ export const CartScreen = () => {
                     <Text style={styles.totalValue}>₹{subtotal.toLocaleString()}</Text>
                 </View>
 
-                <TouchableOpacity style={styles.checkoutButton}>
+                <TouchableOpacity
+                    style={styles.checkoutButton}
+                    onPress={() => navigation.navigate('Checkout')}
+                >
                     <Text style={styles.checkoutText}>Proceed to Checkout</Text>
                     <ArrowRight size={20} color="#FFF" />
                 </TouchableOpacity>

@@ -12,7 +12,9 @@ import {
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { BannerSlidesEntity } from '../types';
 import { COLORS, SPACING } from '../../../theme/theme';
-import { Search } from 'lucide-react-native';
+import { Search, User } from 'lucide-react-native';
+import { useCurrentUser } from '../../User/hooks/useCurrentUser';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -21,8 +23,10 @@ interface HeroBannerProps {
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({ bannerSlides }) => {
+    const { currentUserData: user } = useCurrentUser();
     const [activeIndex, setActiveIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
+    const navigation = useNavigation<any>();
 
     useEffect(() => {
         if (bannerSlides.length > 0) {
@@ -130,7 +134,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ bannerSlides }) => {
                     />
                 ))}
             </View>
-        </View>
+            {/* Profile Header Overlay */}
+            <TouchableOpacity style={styles.profileHeader} onPress={() => navigation.navigate('MainTabs', { screen: 'Account' })}>
+                <View style={styles.avatarContainer}>
+                    {user?.firstName ? (
+                        <Text style={styles.avatarText}>{user?.firstName?.[0]}{user?.lastName?.[0]}</Text>
+                    ) : (
+                        <User size={26} color='#FFFFFF' />
+                    )}
+                </View>
+                <View style={styles.profileInfo}>
+                    <Text style={styles.userName}>{user?.firstName || 'User'} {user?.lastName || ''}</Text>
+                    <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
+                </View>
+            </TouchableOpacity>
+        </View >
     );
 };
 
@@ -214,7 +232,55 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 80, // Adjust height as needed
+        height: 80,
         pointerEvents: 'none',
+    },
+    profileHeader: {
+        position: 'absolute',
+        top: 60,
+        left: SPACING.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    avatarContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#000000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    avatarText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    profileInfo: {
+
+    },
+    userName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.text,
+        textShadowColor: 'rgba(255, 255, 255, 0.8)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+    userEmail: {
+        fontSize: 14,
+        color: COLORS.text,
+        textShadowColor: 'rgba(255, 255, 255, 0.8)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
 });

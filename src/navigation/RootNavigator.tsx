@@ -15,6 +15,7 @@ import { OtpScreen } from '../screens/OtpScreen';
 import { AccountSettingsScreen } from '../screens/AccountSettingsScreen';
 import { ShippingAddressScreen } from '../screens/ShippingAddressScreen';
 import { useUnifiedCart } from '../hooks/useUnifiedCart';
+import { CheckoutScreen } from '../screens/CheckoutScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -181,6 +182,7 @@ export const RootNavigator = () => {
             />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Otp" component={OtpScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
         </Stack.Navigator>
     );
 };
