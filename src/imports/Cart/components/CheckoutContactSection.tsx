@@ -10,9 +10,21 @@ import { useNavigation } from '@react-navigation/native';
 
 interface CheckoutContactSectionProps {
     isGuest: boolean;
+    onChange?: (data: { firstName: string; lastName: string; email: string; phone: string }) => void;
+    onClearError?: (field: string) => void;
+    errors?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+    };
 }
 
-export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ isGuest }) => {
+const capitalizeFirstLetter = (text: string) => {
+    return text.replace(/\b\w/g, char => char.toUpperCase());
+};
+
+export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ isGuest, onChange, onClearError, errors }) => {
     const { user, setIdentifier } = useAuthStore();
     const { sendOtp, isSendingOtp } = useAuth();
     const navigation = useNavigation<any>();
@@ -21,6 +33,12 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
     const [email, setEmail] = useState(user?.email || '');
     const [firstName, setFirstName] = useState(user?.firstName || '');
     const [lastName, setLastName] = useState(user?.lastName || '');
+
+    useEffect(() => {
+        if (onChange) {
+            onChange({ firstName, lastName, email, phone });
+        }
+    }, [firstName, lastName, email, phone]);
 
     const handleSendOtp = () => {
         if (phone.length !== 10) {
@@ -39,7 +57,7 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
 
     if (isGuest) {
         return (
-            <View style={styles.section}>
+            <>
                 <View style={styles.sectionHeader}>
                     <User size={20} color={COLORS.text} />
                     <Text style={styles.sectionTitle}>Contact Information</Text>
@@ -49,10 +67,13 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
                     <Text style={styles.label}>Phone Number</Text>
                     <View style={styles.phoneInputContainer}>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, errors?.phone && styles.inputError, { flex: 1 }]}
                             placeholder="Enter 10-digit phone number"
                             value={phone}
-                            onChangeText={setPhone}
+                            onChangeText={(text) => {
+                                setPhone(text);
+                                if (onClearError) onClearError('phone');
+                            }}
                             keyboardType="phone-pad"
                             maxLength={10}
                         />
@@ -68,13 +89,14 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
                             )}
                         </TouchableOpacity>
                     </View>
+                    {errors?.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
                 </View>
-            </View>
+            </>
         );
     }
 
     return (
-        <View style={styles.section}>
+        <>
             <View style={styles.sectionHeader}>
                 <User size={20} color={COLORS.text} />
                 <Text style={styles.sectionTitle}>Contact Information</Text>
@@ -84,32 +106,44 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
                 <View style={[styles.inputGroup, { flex: 1, marginRight: SPACING.sm }]}>
                     <Text style={styles.label}>First Name</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors?.firstName && styles.inputError]}
                         value={firstName}
-                        onChangeText={setFirstName}
+                        onChangeText={(text) => {
+                            setFirstName(capitalizeFirstLetter(text));
+                            if (onClearError) onClearError('firstName');
+                        }}
                         placeholder="First Name"
                     />
+                    {errors?.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
                 </View>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                     <Text style={styles.label}>Last Name</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors?.lastName && styles.inputError]}
                         value={lastName}
-                        onChangeText={setLastName}
+                        onChangeText={(text) => {
+                            setLastName(capitalizeFirstLetter(text));
+                            if (onClearError) onClearError('lastName');
+                        }}
                         placeholder="Last Name"
                     />
+                    {errors?.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
                 </View>
             </View>
 
             <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email Address</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, errors?.email && styles.inputError]}
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(text) => {
+                        setEmail(text);
+                        if (onClearError) onClearError('email');
+                    }}
                     placeholder="Email Address"
                     keyboardType="email-address"
                 />
+                {errors?.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
@@ -122,15 +156,14 @@ export const CheckoutContactSection: React.FC<CheckoutContactSectionProps> = ({ 
                     keyboardType="phone-pad"
                     editable={false} // Phone is usually verified and not editable here
                 />
+                {errors?.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
             </View>
-        </View>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    section: {
-        marginBottom: SPACING.lg,
-    },
+
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -158,6 +191,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.text,
         backgroundColor: '#FFF',
+    },
+    inputError: {
+        borderColor: '#FF3B30',
+    },
+    errorText: {
+        color: '#FF3B30',
+        fontSize: 12,
+        marginTop: 4,
     },
     grid: {
         flexDirection: 'row',

@@ -1,68 +1,53 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { COLORS, SPACING } from '../../../theme/theme';
 import useAuthStore from '../../../zustand/useAuthStore';
-import { MapPin, Plus, CheckCircle2, Circle } from 'lucide-react-native';
+import { MapPin, Pencil, Check } from 'lucide-react-native';
 
 interface CheckoutAddressSectionProps {
-    selectedAddressId: string | null;
-    onSelectAddress: (id: string) => void;
+    onAddressChange?: (address: { street: string; city: string; zip: string }) => void;
 }
 
 export const CheckoutAddressSection: React.FC<CheckoutAddressSectionProps> = ({
-    selectedAddressId,
-    onSelectAddress
+    onAddressChange
 }) => {
     const { user } = useAuthStore();
-    const [isAddingNew, setIsAddingNew] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
-    // Form state for new address
-    const [street, setStreet] = useState('');
-    const [city, setCity] = useState('');
-    const [zip, setZip] = useState('');
+    const firstAddress = user?.addresses && user.addresses.length > 0 ? user.addresses[0] : null;
 
-    const addresses = user?.addresses || [];
+    // Form state
+    const [street, setStreet] = useState(firstAddress?.street || '');
+    const [city, setCity] = useState(firstAddress?.city || '');
+    const [zip, setZip] = useState(firstAddress?.zip || '');
+
+    useEffect(() => {
+        if (onAddressChange) {
+            onAddressChange({ street, city, zip });
+        }
+    }, [street, city, zip]);
+
+    const handleToggleEdit = () => {
+        setIsEditing(!isEditing);
+    };
 
     return (
-        <View style={styles.section}>
+        <>
             <View style={styles.sectionHeader}>
-                <MapPin size={20} color={COLORS.text} />
-                <Text style={styles.sectionTitle}>Shipping Address</Text>
+                <View style={styles.titleContainer}>
+                    <MapPin size={20} color={COLORS.text} />
+                    <Text style={styles.sectionTitle}>Shipping Address</Text>
+                </View>
+                {!isEditing && (
+                    <TouchableOpacity onPress={handleToggleEdit} style={styles.editButton}>
+                        <Pencil size={16} color={COLORS.primary} />
+                        <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
-            {addresses.map((addr: any) => (
-                <TouchableOpacity
-                    key={addr.id}
-                    style={[
-                        styles.addressCard,
-                        selectedAddressId === addr.id && styles.selectedCard
-                    ]}
-                    onPress={() => onSelectAddress(addr.id)}
-                >
-                    <View style={styles.addressInfo}>
-                        <Text style={styles.streetText}>{addr.street}</Text>
-                        <Text style={styles.cityZipText}>{addr.city}, {addr.zip}</Text>
-                    </View>
-                    {selectedAddressId === addr.id ? (
-                        <CheckCircle2 size={24} color={COLORS.primary} />
-                    ) : (
-                        <Circle size={24} color="#E5E7EB" />
-                    )}
-                </TouchableOpacity>
-            ))}
-
-            {!isAddingNew ? (
-                <TouchableOpacity
-                    style={styles.addNewButton}
-                    onPress={() => setIsAddingNew(true)}
-                >
-                    <Plus size={20} color={COLORS.primary} />
-                    <Text style={styles.addNewText}>Add New Address</Text>
-                </TouchableOpacity>
-            ) : (
-                <View style={styles.newAddressForm}>
-                    <Text style={styles.formTitle}>New Shipping Address</Text>
+            {isEditing ? (
+                <View style={styles.addressForm}>
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Street Address</Text>
                         <TextInput
@@ -93,37 +78,36 @@ export const CheckoutAddressSection: React.FC<CheckoutAddressSectionProps> = ({
                             />
                         </View>
                     </View>
-                    <View style={styles.formActions}>
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => setIsAddingNew(false)}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.saveButton}
-                            onPress={() => {
-                                // Logic to save and select new address
-                                setIsAddingNew(false);
-                            }}
-                        >
-                            <Text style={styles.saveButtonText}>Save Address</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                        style={styles.saveButton}
+                        onPress={handleToggleEdit}
+                    >
+                        <Text style={styles.saveButtonText}>Done</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <View style={styles.addressDisplay}>
+                    <Text style={styles.streetText}>{street || 'No street set'}</Text>
+                    <Text style={styles.cityZipText}>
+                        {city}{city && zip ? ', ' : ''}{zip}
+                        {!city && !zip && 'No city/zip set'}
+                    </Text>
                 </View>
             )}
-        </View>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    section: {
-        marginBottom: SPACING.lg,
-    },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: SPACING.md,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     sectionTitle: {
         fontSize: 18,
@@ -131,22 +115,22 @@ const styles = StyleSheet.create({
         marginLeft: SPACING.sm,
         color: COLORS.text,
     },
-    addressCard: {
+    editButton: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    editButtonText: {
+        color: COLORS.primary,
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 4,
+    },
+    addressDisplay: {
+        backgroundColor: '#F9FAFB',
         padding: SPACING.md,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#E5E7EB',
-        marginBottom: SPACING.sm,
-        backgroundColor: '#FFF',
-    },
-    selectedCard: {
-        borderColor: COLORS.primary,
-        backgroundColor: '#F9FAFB',
-    },
-    addressInfo: {
-        flex: 1,
     },
     streetText: {
         fontSize: 16,
@@ -156,49 +140,30 @@ const styles = StyleSheet.create({
     cityZipText: {
         fontSize: 14,
         color: COLORS.textMuted,
-        marginTop: 2,
+        marginTop: 4,
     },
-    addNewButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        marginTop: SPACING.sm,
-    },
-    addNewText: {
-        color: COLORS.primary,
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 8,
-    },
-    newAddressForm: {
+    addressForm: {
         backgroundColor: '#F9FAFB',
         padding: SPACING.md,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#E5E7EB',
-        marginTop: SPACING.sm,
-    },
-    formTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: SPACING.md,
     },
     inputGroup: {
-        marginBottom: SPACING.md,
+        marginBottom: SPACING.sm,
     },
     label: {
-        fontSize: 14,
+        fontSize: 12,
         color: COLORS.textMuted,
-        marginBottom: 8,
+        marginBottom: 4,
+        fontWeight: '500',
     },
     input: {
         borderWidth: 1,
         borderColor: '#E5E7EB',
         borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
+        padding: 10,
+        fontSize: 15,
         color: COLORS.text,
         backgroundColor: '#FFF',
     },
@@ -206,29 +171,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
-    formActions: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        marginTop: SPACING.sm,
-    },
-    cancelButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        marginRight: 8,
-    },
-    cancelButtonText: {
-        color: COLORS.textMuted,
-        fontSize: 14,
-    },
     saveButton: {
         backgroundColor: COLORS.primary,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 8,
+        marginTop: SPACING.sm,
     },
     saveButtonText: {
         color: '#FFF',
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: 'bold',
     },
 });
