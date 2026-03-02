@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <package android:name="com.phonepe.app" />
+        <package android:name="com.phonepe.app.preprod" />
+    </queries>
 
     <uses-permission android:name="android.permission.INTERNET" />
 

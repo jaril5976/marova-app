@@ -11,12 +11,14 @@ import { CheckoutContactSection } from '../imports/Cart/components/CheckoutConta
 import { CheckoutAddressSection } from '../imports/Cart/components/CheckoutAddressSection';
 import { CheckoutSummarySection } from '../imports/Cart/components/CheckoutSummarySection';
 import { useUpdateUserMutation } from '../hooks/useUpdateUserMutation';
+import { useCreateOrderMutation } from '../imports/Cart/hooks/useCreateOrderMutation';
 
 export const CheckoutScreen = () => {
     const { isAuthenticated, user } = useAuthStore();
     const { cart } = useUnifiedCart();
     const navigation = useNavigation<any>();
     const { updateUserMutation } = useUpdateUserMutation();
+    const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrderMutation();
 
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [contactDetails, setContactDetails] = useState({
@@ -98,9 +100,11 @@ export const CheckoutScreen = () => {
                 });
             }
 
-            // Logic to create order will go here
-            console.log('Placing order with address:', selectedAddress);
-            // After success: navigation.navigate('OrderSuccess');
+            // Create order with PhonePe SDK
+            createOrder({
+                shippingCharge: 20, // Example
+                gstPercentage: 18,  // Example
+            });
         } catch (error) {
             console.error('Order creation/Profile update failed:', error);
         } finally {
@@ -158,11 +162,11 @@ export const CheckoutScreen = () => {
 
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={[styles.placeOrderButton, (!isAuthenticated || isProcessing) && styles.disabledButton]}
+                    style={[styles.placeOrderButton, (!isAuthenticated || isProcessing || isCreatingOrder) && styles.disabledButton]}
                     onPress={handlePlaceOrder}
-                    disabled={!isAuthenticated || isProcessing}
+                    disabled={!isAuthenticated || isProcessing || isCreatingOrder}
                 >
-                    {isProcessing ? (
+                    {isProcessing || isCreatingOrder ? (
                         <ActivityIndicator color="#FFF" />
                     ) : (
                         <>
